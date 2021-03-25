@@ -34,6 +34,33 @@ def game(current_move='KEY_RIGHT'):
         #window.timeout(int(140 - (len(snake)/5 + len(snake)/10)%120)) 
         window.timeout(10)
         
+
+        ##MOVE FOOD
+        if event == KEY_UP:
+            new_food = [food[0]-1, food[1]]
+            if new_food[0] > 0 and new_food not in snake:
+                window.addch(food[0], food[1], ' ')
+                food[0] -= 1
+
+        elif event == KEY_DOWN:
+            new_food = [food[0]+1, food[1]]
+            if new_food[0] < window.getmaxyx()[0]-1 and new_food not in snake:
+                window.addch(food[0], food[1], ' ')
+                food[0] += 1
+
+        elif event == KEY_RIGHT:
+            new_food = [food[0], food[1]+1]
+            if new_food[1] < window.getmaxyx()[1]-1 and new_food not in snake:
+                window.addch(food[0], food[1], ' ')
+                food[1] += 1
+
+        elif event == KEY_LEFT:
+            new_food = [food[0], food[1]-1]
+            if new_food[1]-1 > 0 and new_food not in snake:
+                window.addch(food[0], food[1], ' ')
+                food[1] -= 1
+
+
         #GET AVAILABLE MOVES
         available_moves = get_available_moves(current_move)
 
@@ -68,15 +95,18 @@ def game(current_move='KEY_RIGHT'):
         #CHECK IF HEAD IS IN THE BOARD AND IF IT IS TELEPORT IT
         final_head = teleport_snake_head(best_head)
 
+        #UPDATE THE CURRENT MOVE
+        current_move = best_move
 
         #Exit if snake runs over itself
         if check_if_killed():
-            print(f'\n [LOST]: state: {score}')
+            print(f'\n [LOST]: State: {score}')
             break
 
         #INSERT HEAD
         snake.insert(0, final_head)
 
+    
         # When snake eats the food
         if snake[0] == food:    
             score += 1  
@@ -85,6 +115,7 @@ def game(current_move='KEY_RIGHT'):
         else:    
             last = snake.pop()
             window.addch(last[0], last[1], ' ')
+            window.addch(food[0], food[1], curses.ACS_PI) # display the current food in the new position
         window.addch(snake[0][0], snake[0][1], curses.ACS_CKBOARD)
 
         #DRAW BORDER
@@ -113,68 +144,82 @@ def get_available_moves(current_move):
     return available_moves
 
 def get_best_move_fruit(dx=0, dy=0, current_move=''):
+    
     best_move = current_move
 
-    if dy == 0:
-        if dx < 0: #fruta a esquerda
-            if current_move != KEY_RIGHT:
-                best_move = KEY_LEFT
-
-        else: #fruta a direita
-            if current_move != KEY_LEFT:
-                best_move = KEY_RIGHT
-
-    elif dy < 0:
-        if current_move != KEY_DOWN:
-            best_move = KEY_UP
-
-    else:
-        if current_move != KEY_UP:
-            best_move = KEY_DOWN
-
-    return best_move
-
-
-    '''
+    #PLAY DIAGONAL
     if abs(dy) > abs(dx):
         if dy == 0:
             if dx < 0: #fruta a esquerda
                 if current_move != KEY_RIGHT:
                     best_move = KEY_LEFT
-
+                else:
+                    best_move = random.choice([KEY_DOWN, KEY_UP])
             else: #fruta a direita
                 if current_move != KEY_LEFT:
                     best_move = KEY_RIGHT
-
+                else:
+                    best_move = random.choice([KEY_DOWN, KEY_UP])
         elif dy < 0: #fruta em cima
             if current_move != KEY_DOWN:
                 best_move = KEY_UP
-
+            else:
+                best_move = random.choice([KEY_RIGHT, KEY_LEFT])
         else: #fruta em baixo
             if current_move != KEY_UP:
                 best_move = KEY_DOWN
+            else:
+                best_move = random.choice([KEY_RIGHT, KEY_LEFT])
     
     else:
         if dx == 0:
             if dy < 0: #fruta em cima
                 if current_move != KEY_DOWN:
                     best_move = KEY_UP
-
+                else:
+                    best_move = random.choice([KEY_RIGHT, KEY_LEFT])
             else: #fruta em baixo
                 if current_move != KEY_UP:
                     best_move = KEY_DOWN
-
+                else:
+                    best_move = random.choice([KEY_RIGHT, KEY_LEFT])
         elif dx < 0: #fruta a esquerda
             if current_move != KEY_RIGHT:
                 best_move = KEY_LEFT
-
+            else:
+                best_move = random.choice([KEY_DOWN, KEY_UP])
         else: #fruta a direita
             if current_move != KEY_LEFT:
                 best_move = KEY_RIGHT
+            else:
+                best_move = random.choice([KEY_DOWN, KEY_UP])
+
+    if get_free_space(move=best_move) < 6:
+        #HORIZONTAL
+        if dy == 0:
+            if dx < 0: #fruta a esquerda
+                if current_move != KEY_RIGHT:
+                    best_move = KEY_LEFT
+                else:
+                    best_move = random.choice([KEY_DOWN, KEY_UP])
+            else: #fruta a direita
+                if current_move != KEY_LEFT:
+                    best_move = KEY_RIGHT
+                else:
+                    best_move = random.choice([KEY_DOWN, KEY_UP])
+        elif dy < 0: #fruta em cima
+            if current_move != KEY_DOWN:
+                best_move = KEY_UP
+            else:
+                best_move = random.choice([KEY_RIGHT, KEY_LEFT])
+        else: #fruta em baixo
+            if current_move != KEY_UP:
+                best_move = KEY_DOWN
+            else:
+                best_move = random.choice([KEY_RIGHT, KEY_LEFT])
 
 
     return best_move
-    '''
 
 def get_best_move_sensors(available=[]):
     max_score = 0
@@ -190,6 +235,29 @@ def get_best_move_sensors(available=[]):
             best_move = spec_move
 
     return best_move
+
+def get_fruit_distance(move=''):
+    distance = 0
+
+    possible_head = [snake[0][0] + (move == KEY_DOWN and 1) + (move == KEY_UP and -1), snake[0][1] + (move == KEY_LEFT and -1) + (move == KEY_RIGHT and 1)]
+
+    while possible_head != food and distance < (window.getmaxyx()[1] and window.getmaxyx()[0]): #se nao for instant death
+        #after passing alive check adds 1 to alive state
+        distance += 1
+
+        possible_head = [possible_head[0] + (move == KEY_DOWN and 1) + (move == KEY_UP and -1), possible_head[1] + (move == KEY_LEFT and -1) + (move == KEY_RIGHT and 1)]
+            
+        #TELEPORT THE HEAD IF IN THE BOARD LINES
+        if possible_head[0] == 0:
+            possible_head = [window.getmaxyx()[0]-1,possible_head[1]]
+        elif possible_head[0] == window.getmaxyx()[0]:
+            possible_head = [0, possible_head[1]]
+        elif possible_head[1] == 0:
+            possible_head = [possible_head[0], window.getmaxyx()[1]-1]
+        elif possible_head[1] == window.getmaxyx()[1]:
+            possible_head = [possible_head[0], 0]
+
+    return distance
 
 def check_if_killed():
     if snake[0] in snake[1:]: 
@@ -268,6 +336,63 @@ if __name__ == '__main__':
 
     #build snake based on the head coordinates
     snake = [[spawn_y, spawn_x], [spawn_y, spawn_x-1], [spawn_y, spawn_x-2]]
+
+    #GENERATE A RANDOM "MAP"
+    #vertical wall
+
+    #BUILD 3 VERTICAL WALLS
+    for _ in range(3):
+        x_pos = random.randint(8, window.getmaxyx()[1]-8)
+        y_pos = random.randint(5, window.getmaxyx()[0]-5)
+
+        wall = []
+
+        if y_pos > window.getmaxyx()[0]/2:
+            #BUILD THE WALL
+            for i in range(y_pos - 4):
+                    wall.append([y_pos-i, x_pos])
+                
+            #DRAW THE WALL
+            for chunk in wall:
+                window.addch(chunk[0], chunk[1], curses.LINES)
+
+        else:
+            #BUILD THE WALL
+            for i in range((window.getmaxyx()[0]-4) - y_pos):
+                    wall.append([y_pos+i, x_pos])
+                
+            #DRAW THE WALL
+            for chunk in wall:
+                window.addch(chunk[0], chunk[1], curses.LINES)
+
+    #BUILD 3 HORIZONTAL WALLS
+    for _ in range(3):
+        x_pos = random.randint(8, window.getmaxyx()[1]-8)
+        y_pos = random.randint(5, window.getmaxyx()[0]-5)
+
+        wall = []
+
+        if x_pos > window.getmaxyx()[1]/2:
+            #BUILD THE WALL
+            for i in range(x_pos - 4):
+                wall.append([y_pos, x_pos-1])
+                
+            #DRAW THE WALL
+            for chunk in wall:
+                window.addch(chunk[0], chunk[1], curses.LINES)
+
+        else:
+            #BUILD THE WALL
+            for i in range((window.getmaxyx()[1]-4) - x_pos):
+                wall.append([y_pos, x_pos+1])
+                
+            #DRAW THE WALL
+            for chunk in wall:
+                window.addch(chunk[0], chunk[1], curses.LINES)
+    
+
+
+
 
     #START GAME
     game(current_move=move)
