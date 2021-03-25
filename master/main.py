@@ -77,7 +77,7 @@ def game(current_move='KEY_RIGHT'):
         best_move = fruit_best_move
 
         #IF THE FRUIT BEST MOVE HEAD IS A KILLABLE PLAY OR 6 CHUNKS AWAY FROM DIEING
-        if fruit_move_head in snake or get_free_space(move=fruit_best_move) < random.randint(2, 6):
+        if fruit_move_head in snake or get_free_space(move=fruit_best_move) < random.choice([5,6,7,8,9,10]):
             best_move = get_best_move_sensors(available=available_moves)
             
         choosen = str(best_move).replace("259", "up").replace("260", "left").replace("261", "right").replace("258", "down")
@@ -194,7 +194,8 @@ def get_best_move_fruit(dx=0, dy=0, current_move=''):
             else:
                 best_move = random.choice([KEY_DOWN, KEY_UP])
 
-    if get_free_space(move=best_move) < 6:
+    ###
+    if get_free_space(move=best_move) < 10:
         #HORIZONTAL
         if dy == 0:
             if dx < 0: #fruta a esquerda
@@ -217,7 +218,6 @@ def get_best_move_fruit(dx=0, dy=0, current_move=''):
                 best_move = KEY_DOWN
             else:
                 best_move = random.choice([KEY_RIGHT, KEY_LEFT])
-
 
     return best_move
 
@@ -321,8 +321,29 @@ if __name__ == '__main__':
     window.keypad(True) #enable keypad
     curses.noecho() #turn off automatic echoing of keys to the screen
     curses.curs_set(0)
-    window.nodelay(True) #makes it possible to not wait for the user input
+    window.nodelay(True)
 
+
+    #LOAD MENU
+    while window.getch() != 10:
+        for y in range(1, window.getmaxyx()[0]-1):
+            for x in range(1, window.getmaxyx()[1]-1):
+                if random.choice([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]) == 1:
+                    window.addch(y, x, curses.LINES)
+                else:
+                    window.addch(y, x, ' ')
+
+        window.addstr(int(window.getmaxyx()[0]/2), (int(window.getmaxyx()[1]/2)) - 12, 'Press ENTER To Start')
+
+        curses.delay_output(600)
+
+    #CLEAN BEFORE PLAY
+    for y in range(1, window.getmaxyx()[0]-1):
+        for x in range(1, window.getmaxyx()[1]-1):
+            window.addch(y, x, ' ')
+
+    
+    #LETS PLAY
     #define initial movement direction
     move = KEY_RIGHT
 
@@ -336,60 +357,6 @@ if __name__ == '__main__':
 
     #build snake based on the head coordinates
     snake = [[spawn_y, spawn_x], [spawn_y, spawn_x-1], [spawn_y, spawn_x-2]]
-
-    #GENERATE A RANDOM "MAP"
-    #vertical wall
-
-    #BUILD 3 VERTICAL WALLS
-    for _ in range(3):
-        x_pos = random.randint(8, window.getmaxyx()[1]-8)
-        y_pos = random.randint(5, window.getmaxyx()[0]-5)
-
-        wall = []
-
-        if y_pos > window.getmaxyx()[0]/2:
-            #BUILD THE WALL
-            for i in range(y_pos - 4):
-                    wall.append([y_pos-i, x_pos])
-                
-            #DRAW THE WALL
-            for chunk in wall:
-                window.addch(chunk[0], chunk[1], curses.LINES)
-
-        else:
-            #BUILD THE WALL
-            for i in range((window.getmaxyx()[0]-4) - y_pos):
-                    wall.append([y_pos+i, x_pos])
-                
-            #DRAW THE WALL
-            for chunk in wall:
-                window.addch(chunk[0], chunk[1], curses.LINES)
-
-    #BUILD 3 HORIZONTAL WALLS
-    for _ in range(3):
-        x_pos = random.randint(8, window.getmaxyx()[1]-8)
-        y_pos = random.randint(5, window.getmaxyx()[0]-5)
-
-        wall = []
-
-        if x_pos > window.getmaxyx()[1]/2:
-            #BUILD THE WALL
-            for i in range(x_pos - 4):
-                wall.append([y_pos, x_pos-1])
-                
-            #DRAW THE WALL
-            for chunk in wall:
-                window.addch(chunk[0], chunk[1], curses.LINES)
-
-        else:
-            #BUILD THE WALL
-            for i in range((window.getmaxyx()[1]-4) - x_pos):
-                wall.append([y_pos, x_pos+1])
-                
-            #DRAW THE WALL
-            for chunk in wall:
-                window.addch(chunk[0], chunk[1], curses.LINES)
-    
 
 
 
