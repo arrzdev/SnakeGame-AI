@@ -217,41 +217,11 @@ def get_best_move(current_move='', available=[], dx=0, dy=0):
                     fourth_available = get_available_moves(third_moves)
                     for fourth_moves in fourth_available:
                         father_score += get_free_space(fourth_moves)
-
-                        #5GENERATION
-                        fifth_available = get_available_moves(fourth_moves)
-                        for fifth_moves in fifth_available:
-                            father_score += get_free_space(fifth_moves)
-
-                            #6GENERATION
-                            six_available = get_available_moves(fifth_moves)
-                            for six_moves in six_available:
-                                father_score += get_free_space(six_moves)
-
-                                #7GENERATION
-                                seven_available = get_available_moves(six_moves)
-                                for seven_moves in seven_available:
-                                    father_score += get_free_space(seven_moves)
-
-                                    #8GENERATION
-                                    eight_available = get_available_moves(seven_moves)
-                                    for eight_moves in eight_available:
-                                        father_score += get_free_space(eight_moves)
-
-                                        #9GENERATION
-                                        nine_available = get_available_moves(eight_moves)
-                                        for nine_moves in  nine_available:
-                                            father_score += get_free_space(nine_moves)
-
-                                            #10GENERATION
-                                            ten_available = get_available_moves(nine_moves)
-                                            for ten_moves in  ten_available:
-                                                father_score += get_free_space(ten_moves)
-
-                            #COMPARE SCORES
-                            if father_score > max_score:
-                                max_score = father_score
-                                best_move = first_moves
+                        
+                        #COMPARE SCORES
+                        if father_score > max_score:
+                            max_score = father_score
+                            best_move = first_moves
 
 
 
